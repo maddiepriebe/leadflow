@@ -1,0 +1,34 @@
+{
+  "name": "leadflow",
+  "version": "1.0.0",
+  "description": "A SaaS-style web application that helps small-to-medium B2B sales teams discover high-potential prospects, automate personalized outreach, track interactions in real time, and visualize pipeline health.",
+  "main": "index.js",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "install:all": "npm install"
+  },
+  "devDependencies": {
+    "turbo": "2.6.0",
+    "typescript": "5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maddiepriebe/leadflow.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/maddiepriebe/leadflow/issues"
+  },
+  "homepage": "https://github.com/maddiepriebe/leadflow#readme"
+}

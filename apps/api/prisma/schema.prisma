@@ -1,0 +1,80 @@
+// Prisma Schema 
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// MODELS (Database Tables)
+// ==========================================
+
+model Lead {
+  id              String    @id @default(cuid())  // Primary key
+  firstName       String
+  lastName        String
+  email           String    @unique               // Must be unique
+  phone           String?                         // Optional
+  company         String?
+  position        String?
+  linkedinUrl     String?
+  source          String
+  enrichmentData  Json?                          // Flexible JSON field
+  score           Int?
+  status          String    @default("new")
+  campaignId      String?
+  campaign        Campaign? @relation(fields: [campaignId], references: [id])  // Foreign key
+  messages        Message[]                       // One-to-many
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([email])   // Index for fast lookups
+  @@index([status])
+}
+
+model Campaign {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  status      String     @default("draft")
+  leads       Lead[]                             // One-to-many
+  sequences   Sequence[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Sequence {
+  id         String   @id @default(cuid())
+  name       String
+  steps      Json                                // Array of steps
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  content   String
+  direction String                               // 'inbound' or 'outbound'
+  channel   String                               // 'whatsapp' or 'email'
+  status    String   @default("sent")
+  sentAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+}
+
+model ICP {
+  id        String   @id @default(cuid())
+  name      String
+  criteria  Json                                 // Flexible criteria
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
