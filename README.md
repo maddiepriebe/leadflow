@@ -26,7 +26,6 @@ A SaaS-style web application that helps small-to-medium B2B sales teams discover
 ## Project Structure 
 
 ```tree
-```
 🏗️ Project Architecture
 leadflow/ (Turbo Monorepo)
 │
@@ -58,7 +57,8 @@ leadflow/ (Turbo Monorepo)
     │
     └── ui/                     # Reusable React components
         └── Button, Card, etc.
-
+```
+```tree 
 🔄 System Flow Diagram
 ┌──────────────────────────────────────────────────────────┐
 │                  User Browser                             │
@@ -100,3 +100,4 @@ leadflow/ (Turbo Monorepo)
     │ • Messages │        │            │
     │ • ICP      │        │            │
     └────────────┘        └────────────┘
+```
