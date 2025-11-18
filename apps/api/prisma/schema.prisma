@@ -28,12 +28,15 @@ model Lead {
   status          String    @default("new")
   campaignId      String?
   campaign        Campaign? @relation(fields: [campaignId], references: [id])  // Foreign key
+  icp             ICP?      @relation(fields: [icpId], references: [id] )
   messages        Message[]                       // One-to-many
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@index([email])   // Index for fast lookups
   @@index([status])
+  @@index([icpId])
+  @@index([score])
 }
 
 model Campaign {
@@ -58,23 +61,27 @@ model Sequence {
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  leadId    String
-  lead      Lead     @relation(fields: [leadId], references: [id])
-  content   String
-  direction String                               // 'inbound' or 'outbound'
-  channel   String                               // 'whatsapp' or 'email'
-  status    String   @default("sent")
+  id                String   @id @default(cuid())
+  leadId            String
+  lead              Lead     @relation(fields: [leadId], references: [id])
+  content           String
+  direction         String                               // 'inbound' or 'outbound'
+  channel           String                               // 'whatsapp' or 'email'
+  status            String   @default("sent")
+  trengoMessageId   String? // Trengo's ID for tracking
   sentAt    DateTime @default(now())
   createdAt DateTime @default(now())
 
   @@index([leadId])
+  @@index([status])
 }
 
 model ICP {
   id        String   @id @default(cuid())
   name      String
+  isActive  Boolean  @default(true)
   criteria  Json                                 // Flexible criteria
+  leads     Lead[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

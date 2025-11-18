@@ -1,7 +1,7 @@
 {
-    "$schema":"https://getcomposer.org/schema.json",
+    "$schema":"https://turbo.build/schema.json",
     "globalDependencies": ["**/.env.*local"],
-    "pipeline":{
+    "tasks":{
         "dev":{
             "cache":false,
             "persistent":true
@@ -17,5 +17,4 @@
             "cache":false
         }
     }
-
 }
