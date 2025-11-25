@@ -30,7 +30,7 @@ export default function Layout({ children }: LayoutProps) {
               to="/icp" 
               className="text-gray-600 hover:text-gray-900"
             >
-              ICP
+              ICPs
             </Link>
             <Link 
               to="/leads" 

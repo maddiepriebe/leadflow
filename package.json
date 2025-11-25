@@ -20,6 +20,10 @@
     "turbo": "2.6.0",
     "typescript": "5.9.3"
   },
+  "overrides": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/maddiepriebe/leadflow.git"

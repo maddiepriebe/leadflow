@@ -31,5 +31,6 @@ Thumbs.db
 *.swp
 *.swo
 
-# Prisma
-apps/api/prisma/migrations/ 
+# PRISMA
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal

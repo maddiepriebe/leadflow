@@ -55,12 +55,15 @@ export interface Message {
 export interface ICP{
     id: string;
     name: string;
+    isActive: boolean;
     criteria: {
         industries?: string[];
         companySize?: string[];
         locations?: string[];
         jobTitles?: string[];
         technologies?: string[];
+        keywords?: string[];
+        fundingStages?: string[];
     };
     createdAt: Date;
     updatedAt: Date;

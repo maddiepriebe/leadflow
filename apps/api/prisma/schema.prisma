@@ -22,18 +22,20 @@ model Lead {
   company         String?
   position        String?
   linkedinUrl     String?
+  socials         String?
   source          String
   enrichmentData  Json?                          // Flexible JSON field
   score           Int?
   status          String    @default("new")
   campaignId      String?
+  icpId           String?
   campaign        Campaign? @relation(fields: [campaignId], references: [id])  // Foreign key
   icp             ICP?      @relation(fields: [icpId], references: [id] )
   messages        Message[]                       // One-to-many
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  @@index([email])   // Index for fast lookups
+  @@index([phone])   // Index for fast lookups
   @@index([status])
   @@index([icpId])
   @@index([score])
