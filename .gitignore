@@ -34,3 +34,8 @@ Thumbs.db
 # PRISMA
 apps/api/prisma/*.db
 apps/api/prisma/*.db-journal
+
+# Setup files 
+FRONTEND_GUIDE.md
+SETUP_COMPLETE.md
+QUICKSTART.md
