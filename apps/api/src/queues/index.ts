@@ -24,9 +24,45 @@ export const discoverQueue = new Queue('discover', {
   connection 
 });
 
-// Enrich Queue - Add data to leads
-export const enrichQueue = new Queue('enrich', { 
-  connection 
+// Enrich Queue - Legacy, kept for backwards compatibility
+// Use provider-specific queues instead (apolloQueue, clearbitQueue, etc.)
+export const enrichQueue = new Queue('enrich', {
+  connection
+});
+
+// Google Search Queue - Search for Leads using ICP
+export const googleQueue = new Queue('googleSearch', {
+  connection
+});
+
+// Instagram Search Queue - Search for Leads using ICP
+export const instaQueue = new Queue('instaSearch',  {
+  connection
+});
+
+// LinkedIn Search Queue - Search for Leads using ICP
+export const linkedInQueue = new Queue('likedInSearch', {
+  connection
+});
+
+// Apollo Queue - Search and Enrich via Apollo.io
+export const apolloQueue = new Queue('apollo', {
+  connection
+});
+
+// Clearbit Queue - Enrich via Clearbit
+export const clearbitQueue = new Queue('clearbit', {
+  connection
+});
+
+// Hunter Queue - Email finding and verification via Hunter.io
+export const hunterQueue = new Queue('hunter', {
+  connection
+});
+
+// People Data Labs Queue - Enrich via PDL
+export const peopleDataLabsQueue = new Queue('peopledatalabs', {
+  connection
 });
 
 // Score Queue - Score lead quality

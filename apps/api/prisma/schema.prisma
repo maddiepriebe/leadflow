@@ -26,6 +26,7 @@ model Lead {
   source          String
   enrichmentData  Json?                          // Flexible JSON field
   score           Int?
+  description     String?
   status          String    @default("new")
   campaignId      String?
   icpId           String?
@@ -53,13 +54,15 @@ model Campaign {
 }
 
 model Sequence {
-  id         String   @id @default(cuid())
-  name       String
-  steps      Json                                // Array of steps
-  campaignId String
-  campaign   Campaign @relation(fields: [campaignId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  steps       Json                                // Array of steps
+  description String?
+  prompt      String?
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Message {

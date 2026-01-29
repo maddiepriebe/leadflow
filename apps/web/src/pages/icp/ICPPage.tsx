@@ -604,11 +604,11 @@ export default function ICPPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Profile Name</TableHead>
+                <TableHead>Job Title</TableHead>
                 <TableHead>Industries</TableHead>
                 <TableHead>Company Size</TableHead>
                 <TableHead>Locations</TableHead>
                 <TableHead>Technologies</TableHead>
-                <TableHead>Job Titles</TableHead>
                 <TableHead>Keywords</TableHead>
                 <TableHead>Funding Stages</TableHead>
                 <TableHead>Actions</TableHead>

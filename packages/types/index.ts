@@ -6,6 +6,7 @@ export interface Lead {
     phoneNumber?: string;
     company?: string;
     position?: string;
+    description?: string;
     linkedinURL?: string;
     source: 'linkedIn' | 'website' | 'apollo' | 'hunter' |'meta' | 'other';
     enrichmentData?: any;
@@ -27,6 +28,8 @@ export interface Campaign {
 export interface Sequence {
     id: string;
     name: string;
+    description?: string;
+    prompt?: string;
     steps: SequenceStep[];
     campaignId: string;
     createdAt: Date;

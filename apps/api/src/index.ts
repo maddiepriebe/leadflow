@@ -6,7 +6,7 @@ import leadsRouter from './routes/leads.router.js';
 import sequencesRouter from './routes/sequences.router.js';
 import inboxRouter from './routes/inbox.router.js';
 import analyticsRouter from './routes/analytics.router.js';
-import icpsRouter from './routes/icps.router.js';
+import icpsrouter from './routes/icps.router.js';
 
 // Load environment variables
 dotenv.config();
@@ -34,7 +34,7 @@ app.use('/api/leads', leadsRouter);
 app.use('/api/sequences', sequencesRouter);
 app.use('/api/inbox', inboxRouter);
 app.use('/api/analytics', analyticsRouter);
-app.use('/api/icps', icpsRouter);
+app.use('/api/icps', icpsrouter);
 
 // 404 handler
 app.use((req, res) => {

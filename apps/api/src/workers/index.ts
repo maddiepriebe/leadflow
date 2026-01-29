@@ -1,0 +1,24 @@
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
+// Import all workers - this starts them automatically
+import './leads.worker';
+import './apollo.worker';
+import './google.worker';
+import './enrich.worker';
+import './message.worker';
+
+console.log('🚀 All workers initialized and running');
+
+// Keep the process alive
+process.on('SIGINT', () => {
+  console.log('Shutting down workers...');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('Shutting down workers...');
+  process.exit(0);
+});
