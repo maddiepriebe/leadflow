@@ -71,8 +71,15 @@ export const scoreQueue = new Queue('score', {
 });
 
 // Send Queue - Send messages
-export const sendQueue = new Queue('send', { 
-  connection 
+export const sendQueue = new Queue('send', {
+  connection
+});
+
+// Sequence Queue - Execute sequence steps
+export const sequenceQueue = new Queue('sequence', {
+  connection
 });
 
 console.log('📬 Queues initialized');
+
+export { connection };

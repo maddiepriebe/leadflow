@@ -10,8 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Edit2, Save, X, Loader2, Settings2, Trash2, Plus, UserPlus } from 'lucide-react'
-
-const API_BASE_URL = 'http://localhost:5000';
+import { apiFetch } from '@/lib/api'
 
 // Define all available columns with their labels
 const ALL_COLUMNS = [
@@ -57,7 +56,7 @@ export default function LeadsPage() {
 
   const fetchLeads = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/leads`);
+      const response = await apiFetch('/api/leads');
       const data = await response.json();
       setLeads(data);
     } catch (error) {
@@ -120,16 +119,14 @@ export default function LeadsPage() {
       let response;
       if (isCreating) {
         // Create new lead
-        response = await fetch(`${API_BASE_URL}/api/leads`, {
+        response = await apiFetch('/api/leads', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(editForm),
         });
       } else if (editingLead) {
         // Update existing lead
-        response = await fetch(`${API_BASE_URL}/api/leads/${editingLead.id}`, {
+        response = await apiFetch(`/api/leads/${editingLead.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(editForm),
         });
       } else {
@@ -157,7 +154,7 @@ export default function LeadsPage() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/leads/${id}`, {
+      const response = await apiFetch(`/api/leads/${id}`, {
         method: 'DELETE',
       });
 

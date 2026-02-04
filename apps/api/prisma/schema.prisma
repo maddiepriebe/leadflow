@@ -1,4 +1,4 @@
-// Prisma Schema 
+// Prisma Schema
 
 generator client {
   provider = "prisma-client-js"
@@ -11,6 +11,45 @@ datasource db {
 
 // ==========================================
 // MODELS (Database Tables)
+// ==========================================
+
+// ==========================================
+// USER & AUTHENTICATION
+// ==========================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  role          String    @default("user")  // "admin", "user", "viewer"
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
+// ==========================================
+// LEADS
 // ==========================================
 
 model Lead {
@@ -33,6 +72,7 @@ model Lead {
   campaign        Campaign? @relation(fields: [campaignId], references: [id])  // Foreign key
   icp             ICP?      @relation(fields: [icpId], references: [id] )
   messages        Message[]                       // One-to-many
+  sequenceEnrollments SequenceEnrollment[]        // Sequences this lead is enrolled in
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -59,10 +99,62 @@ model Sequence {
   steps       Json                                // Array of steps
   description String?
   prompt      String?
-  campaignId  String
-  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  campaignId  String?
+  campaign    Campaign? @relation(fields: [campaignId], references: [id])
+  status      String   @default("draft")          // "draft", "active", "paused", "completed"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Relations
+  enrollments SequenceEnrollment[]
+
+  @@index([status])
+}
+
+// ==========================================
+// SEQUENCE EXECUTION
+// ==========================================
+
+model SequenceEnrollment {
+  id              String    @id @default(cuid())
+  sequenceId      String
+  sequence        Sequence  @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  leadId          String
+  lead            Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  currentStepIndex Int      @default(0)           // Which step they're on (0-indexed)
+  status          String    @default("active")    // "active", "paused", "completed", "failed", "unsubscribed"
+  nextStepAt      DateTime?                       // When to execute next step
+  completedAt     DateTime?
+  pausedAt        DateTime?
+  enrolledAt      DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Track individual step executions
+  stepExecutions  StepExecution[]
+
+  @@unique([sequenceId, leadId])                  // A lead can only be enrolled once per sequence
+  @@index([sequenceId])
+  @@index([leadId])
+  @@index([status])
+  @@index([nextStepAt])
+}
+
+model StepExecution {
+  id              String    @id @default(cuid())
+  enrollmentId    String
+  enrollment      SequenceEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  stepIndex       Int                              // Which step was executed
+  status          String    @default("pending")   // "pending", "sent", "delivered", "opened", "clicked", "replied", "bounced", "failed"
+  messageId       String?                          // Reference to Message if sent
+  message         Message?  @relation(fields: [messageId], references: [id])
+  scheduledFor    DateTime
+  executedAt      DateTime?
+  error           String?                          // Error message if failed
+  createdAt       DateTime  @default(now())
+
+  @@index([enrollmentId])
+  @@index([status])
+  @@index([scheduledFor])
 }
 
 model Message {
@@ -73,9 +165,12 @@ model Message {
   direction         String                               // 'inbound' or 'outbound'
   channel           String                               // 'whatsapp' or 'email'
   status            String   @default("sent")
-  trengoMessageId   String? // Trengo's ID for tracking
-  sentAt    DateTime @default(now())
-  createdAt DateTime @default(now())
+  trengoMessageId   String?                              // Trengo's ID for tracking
+  sentAt            DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  // Track which sequence step this message came from
+  stepExecutions    StepExecution[]
 
   @@index([leadId])
   @@index([status])

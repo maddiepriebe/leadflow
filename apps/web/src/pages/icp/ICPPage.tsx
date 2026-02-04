@@ -3,8 +3,7 @@ import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ICP } from '@leadflow/types';
 import { Plus, Trash2, Edit2, Search, Save, X, Loader2} from 'lucide-react';
-
-const API_BASE_URL = 'http://localhost:5000';
+import { apiFetch } from '@/lib/api';
 
 const DEFAULT_ICP_PROFILES: ICP[] = [
   {
@@ -224,7 +223,7 @@ export default function ICPPage() {
   const loadICPs = async() => {
     setIsLoading(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/icps`);
+      const response = await apiFetch('/api/icps');
       if (!response.ok) throw new Error('Failed to fetch ICP profiles');
       const data = await response.json();
       setIcpProfiles(data);
@@ -278,17 +277,15 @@ export default function ICPPage() {
       };
       let response;
       if (editingIcpId) {
-        // update existing profile 
-        response = await fetch(`${API_BASE_URL}/api/icps/${editingIcpId}`, {
+        // update existing profile
+        response = await apiFetch(`/api/icps/${editingIcpId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
       } else {
         // create new profile
-        response = await fetch(`${API_BASE_URL}/api/icps`, {
+        response = await apiFetch('/api/icps', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
       }
@@ -322,7 +319,7 @@ export default function ICPPage() {
       return;
     }
     try {
-      const response = await fetch(`${API_BASE_URL}/api/icps/${id}`, {
+      const response = await apiFetch(`/api/icps/${id}`, {
         method: 'DELETE',
       });
 

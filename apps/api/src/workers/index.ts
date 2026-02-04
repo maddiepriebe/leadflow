@@ -9,6 +9,7 @@ import './apollo.worker';
 import './google.worker';
 import './enrich.worker';
 import './message.worker';
+import './sequence.worker';
 
 console.log('🚀 All workers initialized and running');
 

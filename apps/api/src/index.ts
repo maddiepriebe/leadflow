@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import leadsRouter from './routes/leads.router.js';
@@ -7,6 +8,8 @@ import sequencesRouter from './routes/sequences.router.js';
 import inboxRouter from './routes/inbox.router.js';
 import analyticsRouter from './routes/analytics.router.js';
 import icpsrouter from './routes/icps.router.js';
+import authRouter from './routes/auth.router.js';
+import { requireAuth } from './middleware/auth.middleware.js';
 
 // Load environment variables
 dotenv.config();
@@ -15,8 +18,12 @@ const app = express();
 const prisma = new PrismaClient();
 
 // Middleware
-app.use(cors());  // Allow frontend to call us
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,  // Allow cookies
+}));
 app.use(express.json());  // Parse JSON bodies
+app.use(cookieParser());  // Parse cookies
 
 // Log all requests (for debugging)
 app.use((req, res, next) => {
@@ -25,16 +32,19 @@ app.use((req, res, next) => {
 });
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Routes
-app.use('/api/leads', leadsRouter);
-app.use('/api/sequences', sequencesRouter);
-app.use('/api/inbox', inboxRouter);
-app.use('/api/analytics', analyticsRouter);
-app.use('/api/icps', icpsrouter);
+// Public routes (no auth required)
+app.use('/api/auth', authRouter);
+
+// Protected routes (require authentication)
+app.use('/api/leads', requireAuth, leadsRouter);
+app.use('/api/sequences', requireAuth, sequencesRouter);
+app.use('/api/inbox', requireAuth, inboxRouter);
+app.use('/api/analytics', requireAuth, analyticsRouter);
+app.use('/api/icps', requireAuth, icpsrouter);
 
 // 404 handler
 app.use((req, res) => {
