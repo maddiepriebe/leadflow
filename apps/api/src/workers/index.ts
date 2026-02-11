@@ -7,7 +7,9 @@ dotenv.config();
 import './leads.worker';
 import './apollo.worker';
 import './google.worker';
-import './enrich.worker';
+import './clearbit.worker';
+import './hunter.worker';
+import './peopledatalabs.worker';
 import './message.worker';
 import './sequence.worker';
 
