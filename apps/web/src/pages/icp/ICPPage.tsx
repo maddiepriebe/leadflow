@@ -166,6 +166,35 @@ const DEFAULT_ICP_PROFILES: ICP[] = [
   }
 ];
 
+type SearchSource = 'apollo' | 'google' | 'google-linkedin' | 'instagram' | 'linkedin';
+
+interface IcpSearchStatusResponse {
+  jobId: string;
+  source: SearchSource;
+  state: string;
+  result?: {
+    success?: boolean;
+    totalResults?: number;
+    returnedResults?: number;
+    createdLeads?: number;
+    skippedLeads?: number;
+    page?: number;
+    perPage?: number;
+    totalPages?: number;
+  };
+  error?: string;
+}
+
+interface IcpTestResult {
+  profileId: string;
+  profileName: string;
+  source: SearchSource;
+  jobId: string;
+  state: string;
+  result?: IcpSearchStatusResponse['result'];
+  error?: string;
+}
+
 export default function ICPPage() {
   // State for ICP profiles
   const [icpProfiles, setIcpProfiles] = useState<ICP[]>(DEFAULT_ICP_PROFILES);
@@ -173,7 +202,7 @@ export default function ICPPage() {
   const [editingIcpId, setEditingIcpId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<IcpTestResult | null>(null);
   const [isTestingProfile, setIsTestingProfile] = useState<string | null>(null);
 
   const [currentProfile, setCurrentProfile] = useState<ICP>({
@@ -348,70 +377,100 @@ export default function ICPPage() {
     );
   }
 
-  const convertToApolloParams = (profile: ICP) => {
-    const params: any = {};
+  const readApiError = async (response: Response, fallback: string): Promise<string> => {
+    const payload = await response.json().catch(() => null);
+    if (payload && typeof payload.error === 'string') {
+      return payload.error;
+    }
+    if (payload && typeof payload.message === 'string') {
+      return payload.message;
+    }
+    return fallback;
+  };
 
-    if (profile.criteria.jobTitles && profile.criteria.jobTitles.length > 0) {
-      params.person_titles = profile.criteria.jobTitles;
+  const pollSearchStatus = async (
+    icpId: string,
+    source: SearchSource,
+    jobId: string,
+    maxAttempts = 15
+  ): Promise<IcpSearchStatusResponse> => {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const response = await apiFetch(`/api/icps/${icpId}/search/status/${source}/${jobId}`);
+      if (!response.ok) {
+        const message = await readApiError(response, 'Failed to fetch ICP search job status');
+        throw new Error(message);
+      }
+
+      const status = (await response.json()) as IcpSearchStatusResponse;
+      if (status.state === 'completed' || status.state === 'failed') {
+        return status;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    if (profile.criteria.industries && profile.criteria.industries.length > 0) {
-      params.organization_industry_tag_ids = profile.criteria.industries;
-    }
-
-    if (profile.criteria.companySize && profile.criteria.companySize.length > 0) {
-      params.organization_num_employees_ranges = profile.criteria.companySize;
-    }
-
-    if (profile.criteria.locations && profile.criteria.locations.length > 0) {
-      params.person_locations = profile.criteria.locations;
-    }
-
-    if (profile.criteria.technologies && profile.criteria.technologies.length > 0) {
-      params.currently_using_any_of_technology_uids = profile.criteria.technologies;
-    }
-
-    if (profile.criteria.keywords && profile.criteria.keywords.length > 0) {
-      params.q_keywords = profile.criteria.keywords.join(' ');
-    }
-
-    if (profile.criteria.fundingStages && profile.criteria.fundingStages.length > 0) {
-      params.funding_stage_list = profile.criteria.fundingStages;
-    }
-
-    return params;
+    return {
+      jobId,
+      source,
+      state: 'timeout',
+    };
   };
 
   // Test profile with Apollo API
   const testProfile = async (profile: ICP) => {
     setIsTestingProfile(profile.id);
     setTestResults(null);
+    const source: SearchSource = 'apollo';
 
     try {
-      const apolloParams = convertToApolloParams(profile);
-      
-      // Replace with your actual Apollo API endpoint
-      const response = await fetch('/api/apollo/search', {
+      const response = await apiFetch(`/api/icps/${profile.id}/search`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
-          ...apolloParams,
+          source,
           page: 1,
-          per_page: 10 // Get just 10 results for testing
+          perPage: 10,
         })
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const message = await readApiError(response, 'Failed to queue ICP search job');
+        throw new Error(message);
+      }
+
+      const queued = (await response.json()) as { jobId?: string };
+      if (!queued.jobId) {
+        throw new Error('Queued search job did not include a job ID');
+      }
+
       setTestResults({
         profileId: profile.id,
-        results: data.people || [],
-        totalResults: data.pagination?.total_entries || 0
+        profileName: profile.name,
+        source,
+        jobId: queued.jobId,
+        state: 'queued',
+      });
+
+      const finalStatus = await pollSearchStatus(profile.id, source, queued.jobId);
+      setTestResults({
+        profileId: profile.id,
+        profileName: profile.name,
+        source,
+        jobId: queued.jobId,
+        state: finalStatus.state,
+        result: finalStatus.result,
+        error: finalStatus.error,
       });
     } catch (error) {
       console.error('Error testing profile:', error);
-      alert('Error testing profile. Check console for details.');
+      setTestResults({
+        profileId: profile.id,
+        profileName: profile.name,
+        source,
+        jobId: 'n/a',
+        state: 'failed',
+        error: error instanceof Error ? error.message : 'Failed to test profile',
+      });
+      alert(error instanceof Error ? error.message : 'Error testing profile. Check console for details.');
     } finally {
       setIsTestingProfile(null);
     }
@@ -596,6 +655,26 @@ export default function ICPPage() {
               Saved ICP Profile
             </h2> 
           </div>
+          {testResults && (
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="text-sm font-medium text-gray-900">
+                Last test: {testResults.profileName} ({testResults.source})
+              </div>
+              <div className="text-sm text-gray-600">
+                Job {testResults.jobId} is <span className="font-medium">{testResults.state}</span>
+              </div>
+              {testResults.result && (
+                <div className="text-sm text-gray-600">
+                  Found {testResults.result.totalResults ?? 0} total, returned {testResults.result.returnedResults ?? 0}, created {testResults.result.createdLeads ?? 0}, skipped {testResults.result.skippedLeads ?? 0}.
+                </div>
+              )}
+              {testResults.error && (
+                <div className="text-sm text-red-600">
+                  {testResults.error}
+                </div>
+              )}
+            </div>
+          )}
           <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -657,6 +736,18 @@ export default function ICPPage() {
                   </TableCell>                                   
                   <TableCell>
                     <div className="flex gap-2">
+                      <button
+                        onClick={() => testProfile(profile)}
+                        className="text-gray-600 hover:text-gray-800 disabled:text-gray-400"
+                        title='Test ICP Search'
+                        disabled={Boolean(isTestingProfile)}
+                      >
+                        {isTestingProfile === profile.id ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Search size={16} />
+                        )}
+                      </button>
                       <button
                         onClick={() => editProfile(profile)}
                         className="text-blue-600 hover:text-blue-800"
