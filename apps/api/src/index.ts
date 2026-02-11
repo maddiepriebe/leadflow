@@ -14,6 +14,11 @@ import { requireAuth } from './middleware/auth.middleware.js';
 // Load environment variables
 dotenv.config();
 
+// Provide sane local defaults for MVP startup when .env is not present.
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5433/leadgen';
+}
+
 const app = express();
 const prisma = new PrismaClient();
 
