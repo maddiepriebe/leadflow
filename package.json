@@ -10,11 +10,13 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "turbo run dev",
+    "dev": "docker compose up -d postgres redis >/dev/null 2>&1 || true; turbo run dev workers --parallel",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "clean": "turbo run clean",
-    "install:all": "npm install"
+    "install:all": "npm install",
+    "dev:services": "docker compose up -d postgres redis",
+    "dev:services:down": "docker compose down"
   },
   "devDependencies": {
     "turbo": "2.6.0",

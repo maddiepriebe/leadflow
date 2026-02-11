@@ -325,7 +325,7 @@ async function searchPeople(data: {
     throw new Error(`PDL Search API error: ${error.error?.message || response.statusText}`);
   }
 
-  const searchResult = await response.json();
+  const searchResult = await response.json() as { data?: any[] };
   const people = searchResult.data || [];
 
   console.log(`✅ Found ${people.length} people matching criteria`);

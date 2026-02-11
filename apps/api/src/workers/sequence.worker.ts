@@ -71,7 +71,7 @@ async function executeSequenceStep(enrollmentId: string): Promise<{
   }
 
   // Parse sequence steps
-  const steps = enrollment.sequence.steps as SequenceStep[];
+  const steps = enrollment.sequence.steps as unknown as SequenceStep[];
   const currentStep = steps[enrollment.currentStepIndex];
 
   if (!currentStep) {
@@ -291,7 +291,7 @@ async function enrollLead(
   }
 
   // Parse steps to get first step delay
-  const steps = sequence.steps as SequenceStep[];
+  const steps = sequence.steps as unknown as SequenceStep[];
   const firstStep = steps[0];
 
   // Calculate when to execute first step

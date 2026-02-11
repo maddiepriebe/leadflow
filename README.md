@@ -1,30 +1,78 @@
-# leadflow
-A SaaS-style web application that helps small-to-medium B2B sales teams discover high-potential prospects, automate personalized outreach, track interactions in real time, and visualize pipeline health.
+# LeadFlow
 
-## Architecture 
-### Frontend (User-Facing App)
-- **React** with Vite for fast development
-- **Tailwind CSS** for consistent design, styling
-- **React Router** for navigation
-- **Axios** for API communication
-- **Radix UI** accessible features
-- **Recharts** for funnel and Ops charts, data visualization
+LeadFlow is a monorepo MVP for B2B lead discovery, enrichment, messaging sequences, inbox management, and analytics.
 
-### Backend (Logic and APIs)
-- **Node.js** with express framework for API gateway and webhooks
-- **MangoDB and Mongoose**
-- **JWT Authentication** for short lives access tokens
-- **Azure OpenAI** for AI powered analysis
-- **BullMQ + Redis** for queue and workers, handle jobs off request path
-- **Bull Board or Tashforce.sh** for visibility into jobs, monitor of latency and failure
+## Stack
+- Frontend: React + Vite + TypeScript + Tailwind
+- API: Express + TypeScript + Prisma
+- Async jobs: BullMQ workers + Redis
+- Database: PostgreSQL
 
-### External Integrations
-- **Lead Sourcing (LinkedIn, Apollo, Hunter, Meta)** - information and enrichment providers
-- **Trengo** - outbound and inbound messaging
-- **Azure OpenAI** - personalization, scoring, classification
+## Monorepo Layout
+- `apps/web`: React app
+- `apps/api`: API server, Prisma schema/migrations, workers
+- `packages/types`: shared types
+- `packages/ui`: shared UI components
 
-## Project Structure 
-
-```tree
+## Quick Start
+1. Install dependencies.
+```bash
+npm install
 ```
 
+2. Start the full dev stack from root.
+```bash
+npm run dev
+```
+
+What `npm run dev` does:
+- Attempts to start local `postgres` + `redis` via `docker compose` (non-blocking if Docker is unavailable)
+- Starts web (`http://localhost:3000`)
+- Starts API (`http://localhost:5050`)
+- Starts workers
+
+3. Initialize database schema (first run only).
+```bash
+npm run prisma:migrate --workspace @leadflow/api
+npm run prisma:seed --workspace @leadflow/api
+```
+
+## Environment
+- API loads `apps/api/.env` if present.
+- If `.env` is missing, local dev fallback is used for `DATABASE_URL`:
+  - `postgresql://postgres:postgres@localhost:5433/leadgen`
+- Reference template: `apps/api/.env.example`.
+
+## Local Services
+- Optional explicit service startup:
+```bash
+npm run dev:services
+```
+
+- Stop compose services:
+```bash
+npm run dev:services:down
+```
+
+## Troubleshooting
+- Redis not running:
+  - Symptoms: worker connection errors to `localhost:6379`
+  - Fix: run `npm run dev:services` or start Redis locally
+
+- Postgres not running / DB auth errors:
+  - Symptoms: Prisma errors involving `DATABASE_URL`
+  - Fix: run `npm run dev:services` or set a valid `DATABASE_URL` in `apps/api/.env`
+
+- Port conflicts:
+  - Web default: `3000`
+  - API default: `5050`
+  - Postgres compose host port: `5433`
+  - Redis compose host port: `6379`
+
+- Docker unavailable:
+  - `npm run dev` still starts app processes, but DB/Redis must exist separately
+
+- Missing generated Prisma client after dependency changes:
+```bash
+npm run prisma:generate --workspace @leadflow/api
+```
