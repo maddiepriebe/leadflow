@@ -36,6 +36,16 @@ function getConfiguredProviders(): EnrichmentProvider[] {
   return configured;
 }
 
+const reservedLeadIds = new Set(['enrich', 'enrichment']);
+
+router.param('id', (req, res, next, id: string) => {
+  if (reservedLeadIds.has(id.toLowerCase())) {
+    return res.status(400).json({ error: `Invalid lead id: ${id}` });
+  }
+
+  next();
+});
+
 // GET /api/leads - Get all leads
 router.get('/', async (req, res) => {
   try {
@@ -53,6 +63,23 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Error fetching leads:', error);
     res.status(500).json({ error: 'Failed to fetch leads' });
+  }
+});
+
+// GET /api/leads/enrichment/providers - Get available enrichment providers
+router.get('/enrichment/providers', async (req, res) => {
+  try {
+    const configured = getConfiguredProviders();
+    const all: EnrichmentProvider[] = ['apollo', 'clearbit', 'hunter', 'peopledatalabs'];
+
+    res.json({
+      configured,
+      available: all,
+      unconfigured: all.filter(p => !configured.includes(p))
+    });
+  } catch (error) {
+    console.error('Error fetching providers:', error);
+    res.status(500).json({ error: 'Failed to fetch providers' });
   }
 });
 
@@ -172,23 +199,6 @@ router.delete('/:id', async (req, res) => {
 // ==========================================
 // ENRICHMENT ENDPOINTS
 // ==========================================
-
-// GET /api/leads/enrichment/providers - Get available enrichment providers
-router.get('/enrichment/providers', async (req, res) => {
-  try {
-    const configured = getConfiguredProviders();
-    const all: EnrichmentProvider[] = ['apollo', 'clearbit', 'hunter', 'peopledatalabs'];
-
-    res.json({
-      configured,
-      available: all,
-      unconfigured: all.filter(p => !configured.includes(p))
-    });
-  } catch (error) {
-    console.error('Error fetching providers:', error);
-    res.status(500).json({ error: 'Failed to fetch providers' });
-  }
-});
 
 // POST /api/leads/:id/enrich - Enrich a single lead with specified provider
 router.post('/:id/enrich', async (req, res) => {
