@@ -9,6 +9,7 @@ import inboxRouter from './routes/inbox.router.js';
 import analyticsRouter from './routes/analytics.router.js';
 import icpsrouter from './routes/icps.router.js';
 import authRouter from './routes/auth.router.js';
+import scoringRouter from './routes/scoring.router.js';
 import { requireAuth } from './middleware/auth.middleware.js';
 
 // Load environment variables
@@ -45,6 +46,7 @@ app.use('/api/sequences', requireAuth, sequencesRouter);
 app.use('/api/inbox', requireAuth, inboxRouter);
 app.use('/api/analytics', requireAuth, analyticsRouter);
 app.use('/api/icps', requireAuth, icpsrouter);
+app.use('/api/scoring', requireAuth, scoringRouter);
 
 // 404 handler
 app.use((req, res) => {

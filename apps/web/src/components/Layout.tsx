@@ -66,6 +66,12 @@ export default function Layout({ children }: LayoutProps) {
               >
                 Analytics
               </Link>
+              <Link
+                to="/scoring"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Scoring
+              </Link>
             </div>
 
             {/* Right side - User info and Logout */}

@@ -5,6 +5,7 @@ import LeadsPage from './pages/leads/LeadsPage';
 import SequencesPage from './pages/sequences/SequencesPage';
 import InboxPage from './pages/inbox/InboxPage';
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
+import ScoringPage from './pages/scoring/ScoringPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import { AuthProvider, useAuth, ProtectedRoute } from './contexts/AuthContext';
@@ -94,6 +95,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <AnalyticsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/scoring"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ScoringPage />
             </Layout>
           </ProtectedRoute>
         }

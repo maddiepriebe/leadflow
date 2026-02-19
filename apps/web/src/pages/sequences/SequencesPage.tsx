@@ -296,8 +296,7 @@ export default function SequencesPage() {
           </p>
         </div>
         <Button onClick={handleCreate}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Sequence
+          + Create Sequence
         </Button>
       </div>
 
@@ -309,8 +308,7 @@ export default function SequencesPage() {
               No sequences found. Create your first sequence to get started.
             </p>
             <Button onClick={handleCreate}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Sequence
+              + Create Sequence
             </Button>
           </div>
         ) : (

@@ -39,3 +39,4 @@ apps/api/prisma/*.db-journal
 FRONTEND_GUIDE.md
 SETUP_COMPLETE.md
 QUICKSTART.md
+PIPELINE.md

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { sendQueue } from '../queues/index';
+import { queueTrackConversion, queueScoreLead } from '../workers/scoring.worker';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -216,6 +217,76 @@ router.get('/unread/count', async (req, res) => {
   } catch (error) {
     console.error('Error fetching unread count:', error);
     res.status(500).json({ error: 'Failed to fetch unread count' });
+  }
+});
+
+// ==========================================
+// RECEIVE INBOUND MESSAGE - POST /api/inbox/inbound
+// ==========================================
+// This endpoint would be called by webhooks from messaging providers
+// (WhatsApp, email, etc.) when a lead replies
+
+router.post('/inbound', async (req, res) => {
+  try {
+    const { leadId, content, channel, trengoMessageId } = req.body;
+
+    // Validate required fields
+    if (!leadId || !content || !channel) {
+      res.status(400).json({
+        error: 'Missing required fields',
+        details: 'leadId, content, and channel are required',
+      });
+      return;
+    }
+
+    // Check if lead exists
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+    });
+
+    if (!lead) {
+      res.status(404).json({ error: 'Lead not found' });
+      return;
+    }
+
+    // Create the inbound message record
+    const message = await prisma.message.create({
+      data: {
+        leadId,
+        content,
+        direction: 'inbound',
+        channel,
+        status: 'sent',
+        trengoMessageId: trengoMessageId || null,
+      },
+      include: {
+        lead: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            company: true,
+          },
+        },
+      },
+    });
+
+    // Track this as a reply conversion
+    await queueTrackConversion(leadId, 'reply', channel);
+    console.log(`📥 Inbound message received from lead ${lead.email} via ${channel}`);
+    console.log(`📈 Tracked 'reply' conversion for lead ${leadId}`);
+
+    // Re-score the lead since they replied (engagement signal)
+    await queueScoreLead(leadId);
+
+    res.status(201).json({
+      message: 'Inbound message recorded',
+      data: message,
+    });
+  } catch (error) {
+    console.error('Error recording inbound message:', error);
+    res.status(500).json({ error: 'Failed to record inbound message' });
   }
 });
 

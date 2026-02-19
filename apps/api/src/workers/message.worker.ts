@@ -49,6 +49,7 @@ interface Lead {
     source: string;
     status: string;
     score?: number | null;
+    currentScore?: number | null;
     enrichmentData?: any;
     icpId?: string | null;
 }
@@ -354,7 +355,7 @@ LEAD DETAILS:
 - Role: ${lead.position || 'Business Leader'}
 - Industry: ${industry !== 'default' ? industry : 'business services'}
 - Company Size: ${companySize}
-- Lead Score: ${lead.score || 'N/A'}/100
+- Lead Score: ${(lead as any).currentScore || 'N/A'}/100
 - ICP Match: ${icp?.name || 'General'}
 
 ROLE-SPECIFIC PAIN POINTS (choose the most relevant):
@@ -776,9 +777,10 @@ async function sendMessageToLead(data: {
     }
 
     // Check lead score (only send to qualified leads)
-    if (lead.score !== null && lead.score < 70) {
-        console.log(`⚠️ Lead ${leadId} score too low (${lead.score}), skipping`);
-        return { success: false, leadId, error: `Lead score ${lead.score} below threshold (70)` };
+    const leadScore = (lead as any).currentScore as number | null;
+    if (leadScore !== null && leadScore !== undefined && leadScore < 70) {
+        console.log(`⚠️ Lead ${leadId} score too low (${leadScore}), skipping`);
+        return { success: false, leadId, error: `Lead score ${leadScore} below threshold (70)` };
     }
 
     // Check if already contacted

@@ -75,6 +75,10 @@ model Lead {
   sequenceEnrollments SequenceEnrollment[]        // Sequences this lead is enrolled in
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  currentScore    Float?
+  lastScoredAt    DateTime?
+  scores          LeadScore[]
+  conversions     ConversionEvent[]
 
   @@index([phone])   // Index for fast lookups
   @@index([status])
@@ -184,4 +188,50 @@ model ICP {
   leads     Lead[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// SCORING MODEL
+// ==========================================
+// Lead scoring configuration
+
+model ScoringModel {
+  id          String   @id @default(cuid())
+  version     Int      @default(1)
+  isActive    Boolean  @default(true)
+  weights     Json     // { "hasEmail": 10, "hasPhone": 8, "companySize": 5, ... }
+  createdAt   DateTime @default(now())
+  
+  // Performance metrics
+  totalScored       Int @default(0)
+  totalConverted    Int @default(0)
+  avgConvertedScore Float @default(0)
+}
+
+// Track scoring history for each lead
+model LeadScore {
+  id            String   @id @default(cuid())
+  leadId        String
+  lead          Lead     @relation(fields: [leadId], references: [id])
+  score         Float
+  breakdown     Json     // { "hasEmail": 10, "matchesICP": 15, ... }
+  modelVersion  Int
+  scoredAt      DateTime @default(now())
+  
+  @@index([leadId])
+  @@index([score])
+}
+
+// Track conversion events
+model ConversionEvent {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  type      String   // "reply", "qualified", "converted", "meeting_booked"
+  channel   String?  // "email", "whatsapp", "instagram"
+  metadata  Json?
+  createdAt DateTime @default(now())
+  
+  @@index([leadId])
+  @@index([type])
 }

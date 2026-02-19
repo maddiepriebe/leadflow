@@ -6,6 +6,7 @@ import {
   hunterQueue,
   peopleDataLabsQueue
 } from '../queues';
+import { queueTrackConversion, queueScoreLead } from '../workers/scoring.worker';
 
 // ==========================================
 // LEADS ROUTER
@@ -115,6 +116,9 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Queue initial scoring for the new lead
+    await queueScoreLead(lead.id);
+
     res.status(201).json(lead);
   } catch (error: any) {
     console.error('Error creating lead:', error);
@@ -133,10 +137,40 @@ router.post('/', async (req, res) => {
 // PUT /api/leads/:id - Update lead
 router.put('/:id', async (req, res) => {
   try {
+    const { id } = req.params;
+
+    // Get current lead status before update
+    const existingLead = await prisma.lead.findUnique({
+      where: { id },
+      select: { status: true }
+    });
+
+    if (!existingLead) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    const previousStatus = existingLead.status;
+
+    // Update the lead
     const lead = await prisma.lead.update({
-      where: { id: req.params.id },
+      where: { id },
       data: req.body
     });
+
+    // Track conversion if status changed to a conversion status
+    const newStatus = req.body.status;
+    if (newStatus && newStatus !== previousStatus) {
+      if (newStatus === 'qualified') {
+        await queueTrackConversion(id, 'qualified', 'manual');
+        console.log(`📈 Tracked 'qualified' conversion for lead ${id}`);
+      } else if (newStatus === 'converted') {
+        await queueTrackConversion(id, 'converted', 'manual');
+        console.log(`📈 Tracked 'converted' conversion for lead ${id}`);
+      }
+
+      // Re-score the lead after status change
+      await queueScoreLead(id);
+    }
 
     res.json(lead);
   } catch (error: any) {
